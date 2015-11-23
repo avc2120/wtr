@@ -1,4 +1,4 @@
-package wtr.g1;
+package wtr.g10;
 
 import wtr.sim.Point;
 import java.util.PriorityQueue;

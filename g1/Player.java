@@ -1,149 +1,176 @@
 package wtr.g1;
-import wtr.g1.WisdomPoint;
+
 import wtr.sim.Point;
-import java.util.PriorityQueue;
+
 import java.util.Random;
-import java.util.*;
+import java.util.ArrayList;
+
 public class Player implements wtr.sim.Player {
 
 	// your own id
 	private int self_id = -1;
+
+	private int soulmate = -1;
 
 	// the remaining wisdom per player
 	private int[] W = null;
 
 	// random generator
 	private Random random = new Random();
-	private ArrayList<Integer> friends = new ArrayList<Integer>();
-	private ArrayList<Point> friends_in_zone = new ArrayList<Point>();
-	private ArrayList<Integer> wisdom_queue = new ArrayList<Integer>();
-	private PriorityQueue<WisdomPoint> wisdomQ = new PriorityQueue<WisdomPoint>(new Comparator<WisdomPoint>(){
-	
-		public int compare(WisdomPoint a,WisdomPoint b)
-		{
-			return b.wisdom - a.wisdom;
-		}
-	});
+	private ArrayList<Integer> friends;
 
+	ArrayList<Point> nearby_friends;
+	ArrayList<Point> nearby_strangers;
+	ArrayList<Point> available_friends;
+	ArrayList<Point> available_strangers;
 
 	// init function called once
 	public void init(int id, int[] friend_ids, int strangers)
 	{
-		for (int x=0; x < friend_ids.length; x++)
-			friends.add(friend_ids[x]);
-		// friends = new ArrayList<Integer>(Arrays.asList(friend_ids));
 		self_id = id;
+		friends = new ArrayList<Integer>();
+		nearby_friends = new ArrayList<Point>();
+		nearby_strangers = new ArrayList<Point>();
+		available_friends = new ArrayList<Point>();
+		available_strangers = new ArrayList<Point>();
+
 		// initialize the wisdom array
 		int N = friend_ids.length + strangers + 2;
 		W = new int [N];
-		for (int i = 0 ; i != N ; ++i)
+		for (int i = 0 ; i != N ; ++i) {
 			W[i] = i == self_id ? 0 : -1;
-		for (int friend_id : friend_ids)
+		}
+		for (int friend_id : friend_ids) {
 			W[friend_id] = 50;
-		// wisdom_queue.addAll(Arrays.asList(W));
+			friends.add(friend_id);
+		}
 	}
 
 	// play function
 	public Point play(Point[] players, int[] chat_ids,
 	                  boolean wiser, int more_wisdom)
 	{
-		friends_in_zone.clear();
-		for(Point player: players)
-		{
-			if(friends.contains(player.id))
-			{
-				friends_in_zone.add(player);
-			}
-		}
 		// find where you are and who you chat with
 		int i = 0, j = 0;
-		while (players[i].id != self_id) 
-		{
-			i++;
-		}
-		//who im chatting with
-		while (players[j].id != chat_ids[i]) 
-		{
-			j++;
-		}
+		while (players[i].id != self_id) i++;
+		while (players[j].id != chat_ids[i]) j++;
 		Point self = players[i];
 		Point chat = players[j];
+
 		// record known wisdom
 		W[chat.id] = more_wisdom;
-		wisdomQ.add(new WisdomPoint(chat, W[chat.id]));
+
 		// attempt to continue chatting if there is more wisdom
-		if (wiser) 
+		if (wiser) {
 			return new Point(0.0, 0.0, chat.id);
+		}
+
+		nearby_friends.clear();
+		nearby_strangers.clear();
+		available_friends.clear();
+		available_strangers.clear();
+
 		// try to initiate chat if previously not chatting
-		double mindist = Double.MAX_VALUE;
-		Point next_friend = null;
-		if (i == j)
-			for (Point p : friends_in_zone) {
-				// skip if no more wisdom to gain
-				if (W[p.id] == 0) continue;
-				// compute squared distance
-				double dd = distance(self, p);
-				if(dd < mindist)
-				{
-					mindist = dd;
-					next_friend = p;
+		if (i == j) {
+			for (int k=0; k<players.length; k++) {
+				Point p = players[k];
+				if (friends.contains(p.id)) {
+					nearby_friends.add(p);
+					if (chat_ids[k] == p.id) {
+						available_friends.add(p);
+					}
+				} else {
+					nearby_strangers.add(p);
+					if (chat_ids[k] == p.id) {
+						available_strangers.add(p);
+					}
 				}
+			}
+
+			// SM is first priority
+			if (soulmate != -1) {
+				for (Point p : available_strangers) {
+					// skip if not soulmate
+					if (W[p.id] != soulmate) {
+						continue;
+					}
+					// skip if soulmate is out of wisdom
+					if (W[p.id] > 20 && W[p.id] <= 50) {
+						friends.add(p.id);
+						soulmate = -1;
+						continue;
+					}
+					if (W[p.id] <= 20) {
+						soulmate = -1;
+						continue;
+					}
+					// compute squared distance
+					double dx = p.x - self.x;
+					double dy = p.y - self.y;
+					double dd = dx * dx + dy * dy;
+					// start chatting if in range, else move to SM
+					if (dd >= 0.25 && dd <= 4.0) {
+						return new Point(0.0, 0.0, p.id);
+					} else {
+						return new Point(dx/1.2, dy/1.2, self_id);
+					}
+				}
+			}
+
+			// find a friend to talk to
+			for (Point p : available_friends) {
+				// skip if no more wisdom
+				if (W[p.id] == 0) {
+					continue;
+				}
+				// compute squared distance
+				double dx = p.x - self.x;
+				double dy = p.y - self.y;
+				double dd = dx * dx + dy * dy;
 				// start chatting if in range
-				// Iterator<WisdomPoint> it = wisdomQ.iterator();
-				// if (dd >= 0.25 && dd <= 4.0 && W[p.id]>0 && !wisdomQ.contains(p.id))
-				// {
-				// 	// return new Point(0.0, 0.0, p.id);
-				// 	wisdomQ.add(new WisdomPoint(p, W[p.id]));
-				// }
-				// else
-				// {
-				// 	while(it.hasNext())
-				// 	{
-				// 		WisdomPoint wp=it.next();
-				// 		if (wp.id == p.id)
-				// 		{
-				// 			wp.setWisdom(W[p.id]);
-				// 		}
-				// 	}
-				// }
+				if (dd >= 0.25 && dd <= 4.0)
+					return new Point(0.0, 0.0, p.id);
 			}
-			if(mindist != Double.MAX_VALUE && next_friend!=null)
-			{
-				return new Point(0, 0, next_friend.id);
-			}
-			// if(!wisdomQ.isEmpty())
-			// {
-			// 	// System.out.println("POLLING");
-			// 	System.out.println(wisdomQ);
-			// 	W[wisdomQ.peek().id]-= 6;
-			// 	return new Point(0.0, 0.0, wisdomQ.poll().id);
-			// }
-			for (Point p : players) {
+
+			// find a stranger to talk to
+			for (Point p : available_strangers) {
 				// skip if no more wisdom to gain
-				if (W[p.id] == 0) continue;
+				if (W[p.id] == 0) {
+					continue;
+				}
+				if (W[p.id] > 20) {
+					soulmate = p.id;
+				}
 				// compute squared distance
-				double dd = distance(self, p);
-				if(dd < mindist)
-				{
-					mindist = dd;
-					next_friend = p;
+				double dx = p.x - self.x;
+				double dy = p.y - self.y;
+				double dd = dx * dx + dy * dy;
+				// start chatting if in range
+				if (dd >= 0.25 && dd <= 4.0)
+					return new Point(0.0, 0.0, p.id);
+			}
+		}
+
+		// find a friend out of distance, go to that friend
+		for (Point p : nearby_friends) {
+				// skip if no more wisdom to gain
+				if (W[p.id] == 0) {
+					continue;
+				}
+				// compute squared distance
+				double dx = p.x - self.x;
+				double dy = p.y - self.y;
+				double dd = dx * dx + dy * dy;
+				// start chatting if in range
+				if (dd > 4) {
+					return new Point(dx/1.2, dy/1.2, self_id);
 				}
 			}
-			if(mindist != Double.MAX_VALUE && next_friend!=null)
-			{
-				return new Point(0, 0, next_friend.id);
-			}
+
 		// return a random move
 		double dir = random.nextDouble() * 2 * Math.PI;
 		double dx = 6 * Math.cos(dir);
 		double dy = 6 * Math.sin(dir);
 		return new Point(dx, dy, self_id);
-	}
-
-	public static double distance(Point p1, Point p2)
-	{
-		double dx = p1.x - p2.x;
-		double dy = p1.y - p2.y;
-		return Math.sqrt(dx*dx + dy*dy);
 	}
 }
