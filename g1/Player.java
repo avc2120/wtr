@@ -74,7 +74,7 @@ public class Player implements wtr.sim.Player {
 		if (i == j) {
 			for (int k=0; k<players.length; k++) {
 				Point p = players[k];
-				if (friends.contains(p.id)) {
+				if (friends.contains(p.id) && W[p.id] > 20) {
 					nearby_friends.add(p);
 					if (chat_ids[k] == p.id) {
 						available_friends.add(p);
@@ -153,6 +153,22 @@ public class Player implements wtr.sim.Player {
 
 		// find a friend out of distance, go to that friend
 		for (Point p : available_friends) {
+			// skip if no more wisdom to gain
+			if (W[p.id] == 0) {
+				continue;
+			}
+			// compute squared distance
+			double dx = p.x - self.x;
+			double dy = p.y - self.y;
+			double dd = dx * dx + dy * dy;
+			// start chatting if in range
+			if (dd > 4) {
+				return new Point(dx/2, dy/2, self_id);
+			}
+		}
+
+		// find a stranger out of distance, go to that stranger
+		for (Point p : available_strangers) {
 			// skip if no more wisdom to gain
 			if (W[p.id] == 0) {
 				continue;
