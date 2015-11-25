@@ -106,11 +106,12 @@ class Simulator {
 		// start game
 		int[] score = new int [N];
 		boolean[] timeout = new boolean [N];
+		int max_score = -1;
 		try {
-			game(groups, classes, friends, strangers,
-			     room_side, turns, score, timeout,
-			     init_timeout, play_timeout,
-			     gui, gui_refresh, verbose);
+			max_score = game(groups, classes, friends, strangers,
+			                 room_side, turns, score, timeout,
+			                 init_timeout, play_timeout,
+			                 gui, gui_refresh, verbose);
 		} catch (Exception e) {
 			System.err.println("Error during the game: " + e.getMessage());
 			e.printStackTrace();
@@ -118,24 +119,25 @@ class Simulator {
 		}
 		for (int i = 0 ; i != score.length ; ++i)
 			System.err.println("Player " + i + " (" + groups[i] + ") scored: " + score[i]);
+		System.err.println("Maximum possible score: " + max_score);
 		System.exit(0);
 	}
 
 	private static final Random random = new Random();
 
-	private static void game(String[] groups,
-	                         ArrayList <Class <Player> > classes,
-	                         int friends,
-	                         int strangers,
-	                         int room_side,
-	                         int turns,
-	                         int[] score,
-	                         boolean[] timeout,
-	                         long init_timeout,
-	                         long play_timeout,
-	                         boolean gui,
-	                         long gui_refresh,
-	                         boolean verbose) throws Exception
+	private static int game(String[] groups,
+	                        ArrayList <Class <Player> > classes,
+	                        int friends,
+	                        int strangers,
+	                        int room_side,
+	                        int turns,
+	                        int[] score,
+	                        boolean[] timeout,
+	                        long init_timeout,
+	                        long play_timeout,
+	                        boolean gui,
+	                        long gui_refresh,
+	                        boolean verbose) throws Exception
 	{
 		int N = friends + strangers + 2;
 		if (classes.size() != N || groups.length != N ||
@@ -153,6 +155,9 @@ class Simulator {
 		}
 		// initialize wisdom and friends array
 		int[][] W = wisdom(friends, strangers);
+		int max_score = 0;
+		for (int i = 0 ; i != W[0].length ; ++i)
+			max_score += W[0][i];
 		System.err.println("Wisdom array generated");
 		boolean[][] F = new boolean [N][N];
 		int[] Sm = new int [N];
@@ -426,6 +431,7 @@ class Simulator {
 			                  room_side, clock(turns * 6), -1));
 			server.close();
 		}
+		return max_score;
 	}
 
 	private static String clock(int seconds)
