@@ -19,10 +19,10 @@ public class Player implements wtr.sim.Player {
 	private Random random = new Random();
 	private ArrayList<Integer> friends;
 
-	ArrayList<Point> nearby_friends;
-	ArrayList<Point> nearby_strangers;
-	ArrayList<Point> available_friends;
-	ArrayList<Point> available_strangers;
+	private ArrayList<Point> nearby_friends;
+	private ArrayList<Point> nearby_strangers;
+	private ArrayList<Point> available_friends;
+	private ArrayList<Point> available_strangers;
 
 	// init function called once
 	public void init(int id, int[] friend_ids, int strangers)
@@ -112,7 +112,7 @@ public class Player implements wtr.sim.Player {
 					if (dd >= 0.25 && dd <= 4.0) {
 						return new Point(0.0, 0.0, p.id);
 					} else {
-						return new Point(dx/1.2, dy/1.2, self_id);
+						return new Point(dx/2, dy/2, self_id);
 					}
 				}
 			}
@@ -152,20 +152,20 @@ public class Player implements wtr.sim.Player {
 		}
 
 		// find a friend out of distance, go to that friend
-		for (Point p : nearby_friends) {
-				// skip if no more wisdom to gain
-				if (W[p.id] == 0) {
-					continue;
-				}
-				// compute squared distance
-				double dx = p.x - self.x;
-				double dy = p.y - self.y;
-				double dd = dx * dx + dy * dy;
-				// start chatting if in range
-				if (dd > 4) {
-					return new Point(dx/1.2, dy/1.2, self_id);
-				}
+		for (Point p : available_friends) {
+			// skip if no more wisdom to gain
+			if (W[p.id] == 0) {
+				continue;
 			}
+			// compute squared distance
+			double dx = p.x - self.x;
+			double dy = p.y - self.y;
+			double dd = dx * dx + dy * dy;
+			// start chatting if in range
+			if (dd > 4) {
+				return new Point(dx/2, dy/2, self_id);
+			}
+		}
 
 		// return a random move
 		double dir = random.nextDouble() * 2 * Math.PI;
