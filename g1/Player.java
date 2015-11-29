@@ -33,7 +33,6 @@ public class Player implements wtr.sim.Player {
 		nearby_strangers = new ArrayList<Point>();
 		available_friends = new ArrayList<Point>();
 		available_strangers = new ArrayList<Point>();
-
 		// initialize the wisdom array
 		int N = friend_ids.length + strangers + 2;
 		W = new int [N];
@@ -50,13 +49,14 @@ public class Player implements wtr.sim.Player {
 	public Point play(Point[] players, int[] chat_ids,
 	                  boolean wiser, int more_wisdom)
 	{
+
 		// find where you are and who you chat with
 		int i = 0, j = 0;
 		while (players[i].id != self_id) i++;
 		while (players[j].id != chat_ids[i]) j++;
 		Point self = players[i];
 		Point chat = players[j];
-
+		KMeans kmeans = new KMeans(3, players, self);
 		// record known wisdom
 		W[chat.id] = more_wisdom;
 

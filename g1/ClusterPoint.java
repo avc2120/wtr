@@ -1,17 +1,18 @@
 package wtr.g1;
 
+import wtr.sim.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class ClusterPoint extends Point implements Comparable<ClusterPoint>{
 
-	public ClusterPoint(double x, double y) {
-		super(x, y);
+	public ClusterPoint(double x, double y, int id) {
+		super(x, y, id);
 	}
 	
-	public ClusterPoint(double x, double y,  int cluster_number) {
-		super(x, y);
+	public ClusterPoint(double x, double y, int id, int cluster_number) {
+		super(x, y, id);
 		this.cluster_number= cluster_number;
 	}
 	
@@ -40,33 +41,15 @@ public class ClusterPoint extends Point implements Comparable<ClusterPoint>{
 	        return Math.sqrt(Math.pow((centroid.getY() - p.getY()), 2) + Math.pow((centroid.getX() - p.getX()), 2));
 	    }
 	    
-	    //Creates random point
-	    protected static ClusterPoint createRandomPoint(int min, int max) {
-	    	Random r = new Random();
-	    	double x = min + (max - min) * r.nextDouble();
-	    	double y = min + (max - min) * r.nextDouble();
-	    	return new ClusterPoint(x,y);
-	    }
-	    
-	    //Creates random point
-	    protected static ClusterPoint getMidPoint(int min, int max , int points) {
-	    	Random r = new Random();
-	    	double x = min + (max - min) * r.nextDouble();
-	    	double y = min + (max - min) * r.nextDouble();
-	    	return new ClusterPoint(x,y);
-	    }
-	    
-	    protected static List<ClusterPoint> createRandomPoints(int min, int max, int number) {
-	    	List<ClusterPoint> points = new ArrayList<ClusterPoint>(number);
-	    	for(int i = 0; i < number; i++) {
-	    		points.add(createRandomPoint(min,max));
-	    	}
-	    	return points;
-	    }
+	    // //Creates random point
+	    // protected static ClusterPoint getMidPoint(int min, int max , int points) {
+	    // 	Random r = new Random();
+	    // 	double x = min + (max - min) * r.nextDouble();
+	    // 	double y = min + (max - min) * r.nextDouble();
+	    // 	return new ClusterPoint(x,y, 0);
+	    // }
 
-		/* (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
+
 		@Override
 		public String toString() {
 			return "ClusterPoint [cluster_number=" + cluster_number + ", ("
@@ -76,15 +59,14 @@ public class ClusterPoint extends Point implements Comparable<ClusterPoint>{
 		public static List<ClusterPoint> pointToClusterPoint(Point[] rats) {
 			List<ClusterPoint> cpList=new ArrayList<ClusterPoint>(); 
 			for(Point r :rats){
-				cpList.add(new ClusterPoint(r.x,r.y));
+				cpList.add(new ClusterPoint(r.x,r.y, r.id));
 			}
 			return cpList;
 		}
 
-		@Override
-		public int compareTo(ClusterPoint p2) {
-			return Double.compare(ClusterPoint.distance(KMeans.gatePoint,this),
-					ClusterPoint.distance(KMeans.gatePoint,p2));
+ 		public int compareTo(ClusterPoint p2) {
+			return Double.compare(ClusterPoint.distance(KMeans.myPosition,this),
+					ClusterPoint.distance(KMeans.myPosition,p2));
 		}
- 
+
 }

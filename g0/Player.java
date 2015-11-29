@@ -1,7 +1,6 @@
 package wtr.g0;
-
 import wtr.sim.Point;
-
+import java.util.*;
 import java.util.Random;
 
 public class Player implements wtr.sim.Player {
@@ -60,5 +59,12 @@ public class Player implements wtr.sim.Player {
 		double dx = 6 * Math.cos(dir);
 		double dy = 6 * Math.sin(dir);
 		return new Point(dx, dy, self_id);
+	}
+
+	public double distance(Point p1, Point p2)
+	{
+		double dx = p1.x - p2.x;
+		double dy = p1.y - p2.y;
+		return Math.sqrt(dx*dx + dy*dy);
 	}
 }
