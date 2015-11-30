@@ -10,7 +10,7 @@ public class KMeans
     private int NUM_CLUSTERS = 3;    
     public static ClusterPoint myPosition;
     private List<ClusterPoint> points;
-    private List<Cluster> clusters;
+    public List<Cluster> clusters;
 
     public KMeans(int ClusterCount, Point[] players, Point myPoint) 
     {
@@ -36,8 +36,8 @@ public class KMeans
 
         init(players, centerPoints);
         calculate();
-        printClusterSizes(); 
-        sortClustersAndUpdateShortestPathsInCluster();
+        // printClusterSizes(); 
+        // sortClustersAndUpdateShortestPathsInCluster();
         // plotClusters();
     }
 
@@ -86,11 +86,11 @@ public class KMeans
             {
                 distance += ClusterPoint.distance(lastCentroids.get(i),currentCentroids.get(i));
             }
-            
-            System.out.println("#################");
-            System.out.println("Iteration: " + iteration);
-            System.out.println("Centroid distances: " + distance);
-            System.out.println("#################");
+
+            // System.out.println("#################");
+            // System.out.println("Iteration: " + iteration);
+            // System.out.println("Centroid distances: " + distance);
+            // System.out.println("#################");
             // plotClusters();
                         
             if(distance < 0.001) 
