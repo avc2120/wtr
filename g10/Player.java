@@ -88,7 +88,7 @@ public class Player implements wtr.sim.Player {
 			double best = 0;
 			for (Point p : players) {
 				// skip if no more wisdom to gain
-				if (W[p.id] == 0) {
+				if (W[p.id] == 0 || has_players_within_radius(self, players, p, 0.6)) {
 					continue;
 				}
 				double temp = score_player(p, players, self);
@@ -96,7 +96,7 @@ public class Player implements wtr.sim.Player {
 					best = temp;
 					// start chatting if in range
 					double dd = distance_squared(p, self);
-					if (dd >= 0.25 && dd <= 0.5) {
+					if (dd >= 0.25 && dd <= 0.4) {
 						m = new Point(0.0, 0.0, p.id);
 					}
 				}
@@ -116,8 +116,8 @@ public class Player implements wtr.sim.Player {
 				if (temp > best) {
 					best = temp;
 					r = false;
-					double x = (p.x - self.x - 0.5);
-					double y = (p.y - self.y - 0.5);
+					double x = p.x - self.x - 0.4;
+					double y = p.y - self.y - 0.4;
 					m = new Point(x, y, self.id);
 				}
 			}
@@ -142,7 +142,7 @@ public class Player implements wtr.sim.Player {
 		if (p.id == soulmate) {
 			wisdom *= 1.5;
 		}
-		if (has_players_within_radius(p, players, self, 0.5)) {
+		if (has_players_within_radius(p, players, self, 0.6)) {
 			return wisdom - 30;
 		} else if (distance_squared(p, self) < 1) {
 			return wisdom + 10;
@@ -160,12 +160,10 @@ public class Player implements wtr.sim.Player {
 
 	private boolean has_players_within_radius(Point player, Point[] players, Point self, double r) {
 		for (Point p : players) {
-			if (p == player || p == self)
+			if (p == player || p == self) {
 				continue;
-			double dx = player.x - p.x;
-			double dy = player.y - p.y;
-			double dd = dx * dx + dy * dy;
-			if (dd <= r) {
+			}
+			if (distance_squared(player, p) <= r*r) {
 				return true;
 			}
 		}
