@@ -19,6 +19,8 @@ public class Player implements wtr.sim.Player {
     private int friends;
     private int pchatid;
     private int tick = -1;
+    private int ticks_since_wisdom = 0;
+    private int TICK_WISDOM_THRESHOLD = 8;
     private int interference_counter = 0;
 
     // random generator
@@ -124,7 +126,7 @@ public class Player implements wtr.sim.Player {
 
         // compute a point that is 0.5 away
         println("teleport computed to  " + tgt.id);
-        return teleport(tgt, 0.52, id_lut);
+        return teleport(tgt, 0.505, id_lut);
     }
 
     private Point teleportToHighestScoreDensity(Map<Integer, Point> id_lut) {
@@ -219,6 +221,25 @@ public class Player implements wtr.sim.Player {
 
         Point move = null;
 
+
+        if (wiser) {
+            ticks_since_wisdom = 0;
+        } else {
+            if (++ticks_since_wisdom > TICK_WISDOM_THRESHOLD) {
+                if (Math.random() > 0.5) {
+                    ticks_since_wisdom = 0;
+                }
+
+                // return a random move
+                double dir = random.nextDouble() * 2 * Math.PI;
+                double r = 6;
+                double dx = r * Math.cos(dir) + self.x;
+                double dy = r * Math.sin(dir) + self.y;
+                println("no wisdom, final move: random teleport");
+                return teleport(new Point(dx, dy, self_id), id_lut);
+            }
+        }
+
         if (chat_id < 0) {
             interference_counter = 0;
             // not chatting with anyone right now!
@@ -284,11 +305,34 @@ public class Player implements wtr.sim.Player {
             println("was chatting with " + chat_id + " with remaining wisdom " + more_wisdom + " wiser: " +
                     (wiser ? 1 : 0) + " Wus: " + Wus[chat_id]);
             move = new Point(0.0, 0.0, chat_id);
+            // int wait_for = Math.max((this.friends + this.strangers + 2)/100, 1);
+            int wait_for;
+            // if dense board (more than 100 people)
+            if ((this.friends + this.strangers + 2) > 100)
+                wait_for = 2;
+            else
+                // if sparse board
+                wait_for = 1;
+
+            // if (more_wisdom > 5)  //TODO replace with some proportion of the total more_wisodm possible
+            //     wait_for += 1;
+            if (more_wisdom > 10)
+                wait_for += 1;
+            else if (more_wisdom > 50) // if soulmate still worth much more than a friend
+                wait_for += 1;
+
+            if (tick > 0.6 * 1800) //if 60% of the time has elapsed
+                wait_for = Math.min(wait_for, 1);
+            else if (tick > 0.3 * 1800) // if 30% time has elapsed
+                wait_for = Math.min(wait_for, 2);
+            else
+                wait_for = Math.min(wait_for, 3); // if ample time left
+
             if (wiser) {
                 interference_counter = 0;
             } else {
                 ++interference_counter;
-                if (interference_counter > 5 || more_wisdom == 0) {
+                if (interference_counter > wait_for || more_wisdom == 0) {
                     if (more_wisdom == 0) {
                         println("Done talking with " + chat_id);
                     } else {
