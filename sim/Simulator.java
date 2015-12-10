@@ -18,14 +18,15 @@ class Simulator {
 		int friends = 10;
 		int strangers = 88;
 		boolean verbose = false;
-		long init_timeout = 1000;
-		long play_timeout = 1000;
+		long init_timeout = 0;
+		long play_timeout = 0;
 		int room_side = 20;
 		int turns = 1800;
 		boolean gui = false;
 		long gui_refresh = 100;
 		String[] groups = null;
-		PrintStream out = null;
+		int game_id = -1;
+		PrintStream file = null;
 		ArrayList <Class <Player> > classes = null;
 		TreeSet <String> group_set = new TreeSet <String> ();
 		group_set.add("g0");
@@ -62,10 +63,11 @@ class Simulator {
 					double gui_fps = Double.parseDouble(args[a]);
 					gui_refresh = gui_fps > 0.0 ? Math.round(1000.0 / gui_fps) : -1;
 					gui = true;
-				} else if (args[a].equals("--file")) {
-					if (++a == args.length)
-						throw new IllegalArgumentException("Invalid file path");
-					out = new PrintStream(new FileOutputStream(args[a], false));
+				} else if (args[a].equals("--id")) {
+					if (a + 2 >= args.length)
+						throw new IllegalArgumentException("Invalid tournament result");
+					game_id = Integer.parseInt(args[++a]);
+					file = new PrintStream(new FileOutputStream(args[++a], true));
 				} else if (args[a].equals("--gui")) gui = true;
 				else if (args[a].equals("--verbose")) verbose = true;
 				else throw new IllegalArgumentException("Unknown argument: " + args[a]);
@@ -91,6 +93,7 @@ class Simulator {
 			System.exit(1);
 		}
 		int N = friends + strangers + 2;
+		int group_instances = N / group_set.size();
 		// print info
 		System.err.println("Friends: " + friends);
 		System.err.println("Strangers: " + strangers);
@@ -98,7 +101,7 @@ class Simulator {
 		for (String group : group_set)
 			System.err.print(" " + group);
 		System.err.println("");
-		System.err.println("Instances (per player): " + N / group_set.size());
+		System.err.println("Instances (per player): " + group_instances);
 		System.err.println("Verbose: " + (verbose ? "yes" : "no"));
 		if (!gui)
 			System.err.println("GUI: disabled");
@@ -110,7 +113,7 @@ class Simulator {
 			double fps = 1000.0 / gui_refresh;
 			System.err.println("GUI: enabled  (up to " + fps + " FPS)");
 		}
-		if (out == null) out = System.err;
+		if (file == null) file = System.err;
 		else {
 			System.out.close();
 			System.err.close();
@@ -130,13 +133,22 @@ class Simulator {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		file.println("insert into games values (" + game_id + "," + friends + "," + N + "," + max_score + ");");
+		file.print("insert into players values ");
+		for (int i = 0 ; i != N ; ++i) {
+			if (i != 0) file.print(",");
+			int j = (i % group_instances) + 1;
+			String s = soulmate[i] ? "yes" : "no";
+			file.print("(" + game_id + ",'" + groups[i] + "','" + s + "'," + j + "," + score[i] + ")");
+		}
+		file.println(";");
 		for (int i = 0 ; i != score.length ; ++i)
-			out.println("Player " + i + " (" + groups[i] +
+			System.out.println("Player " + i + " (" + groups[i] +
 			            ") scored: " + score[i] +
 			            (score[i] == max_score ? " (maximum score) " : " ") +
 			            (soulmate[i] ? "[soulmate chat]" : ""));
-		out.println("Available wisdom: " + max_score);
-		int group_instances = N / group_set.size();
+		System.out.println("Available wisdom: " + max_score);
+	 
 		int i = 0;
 		for (String group : group_set) {
 			int min_group_score = max_score + 1;
@@ -151,7 +163,7 @@ class Simulator {
 			}
 			int avg_group_score = (int) Math.round(sum_group_score * 1.0 /
 			                                           group_instances);
-			out.println("Group " + group +
+			System.out.println("Group " + group +
 			            ": [" + min_group_score +
 			             ", " + avg_group_score +
 			             ", " + max_group_score + "]");
@@ -178,8 +190,7 @@ class Simulator {
 		}
 		System.err.println("-------------------------------------------------");
 		System.err.println("Maximum possible score: " + max_score);
-	
-		if (out != System.err) out.close();
+		if (file != System.err) file.close();
 		System.exit(0);
 	}
 
@@ -648,7 +659,6 @@ class Simulator {
 						if (i != j && !M[j] && C[i][j]) k2++;
 					do {
 						// pick a unmarked connected node
-						 System.out.println(k2);
 						k = random.nextInt(k2) + 1;
 						for (j = 0 ;; ++j)
 							if (!M[j] && C[i][j] && --k == 0) break;
