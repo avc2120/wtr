@@ -156,29 +156,6 @@ class Simulator {
 			             ", " + avg_group_score +
 			             ", " + max_group_score + "]");
 		}
-		
-		Map<String, Integer> merged=new TreeMap<String, Integer>();
-		  
-        ValueComparator bvc = new ValueComparator(merged);
-        TreeMap<String, Integer> sorted_map = new TreeMap<String, Integer>(bvc);
-		for ( i = 0 ; i != score.length ; ++i){
-			//System.err.println("Player " + i + " (" + groups[i] + ") scored: " + score[i]);
-			if(!merged.containsKey(groups[i])) 
-				merged.put(groups[i], 0);
-			merged.put(groups[i], merged.get(groups[i])+ score[i]);
-		}
-		sorted_map.putAll(merged);
-		System.err.println("-------------------------------------------------");
-		 i=1;
-		Date startTime=new Date();
-		long time=startTime.getTime();
-		for(Map.Entry<String, Integer> e : sorted_map.entrySet()){
-			System.err.println(time+"|"+i+"|"+e.getKey() + "|" + e.getValue());
-			i++;
-		}
-		System.err.println("-------------------------------------------------");
-		System.err.println("Maximum possible score: " + max_score);
-	
 		if (out != System.err) out.close();
 		System.exit(0);
 	}
@@ -648,7 +625,6 @@ class Simulator {
 						if (i != j && !M[j] && C[i][j]) k2++;
 					do {
 						// pick a unmarked connected node
-						 System.out.println(k2);
 						k = random.nextInt(k2) + 1;
 						for (j = 0 ;; ++j)
 							if (!M[j] && C[i][j] && --k == 0) break;
